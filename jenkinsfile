@@ -1,0 +1,38 @@
+pipeline {
+    agent any
+    
+    stages {
+        stage('checkout') {
+            steps {
+                // Get the code from the Git hub Repository
+                git 'https://github.com/sirisharapuru/mavenrepo.git'
+            }
+        }    
+        stage('build'){
+            steps {
+                // maven build for generating artifacts
+                sh 'mvn package'
+            }
+        }
+        stage('sonar'){
+            steps {
+                // sonar code quality checking
+                withSonarQubeEnv(credentialsId: 'sonartoken', installationName: 'sonarqube') {
+    // sh 'mvn sonar:sonar'
+}
+            }
+        }
+        stage('nexus'){
+            steps {
+                nexusArtifactUploader artifacts: [[artifactId: 'studentapp', classifier: '', file: 'target/studentapp-2.5-SNAPSHOT.war', type: 'war']], 
+                credentialsId: 'nexus', groupId: 'com.jdevs', nexusUrl: '13.235.86.12:8081', nexusVersion: 'nexus3', protocol: 'http', repository: 'maven-snapshots', 
+                version: '2.5-SNAPSHOT'
+            }
+        }
+        stage('deploy'){
+            steps{
+                deploy adapters: [tomcat9(credentialsId: 'tomcat', path: '', url: 'http://65.0.3.158:8080/')], contextPath: null, war: '**/*.war'
+            }
+        }
+    }      
+    }
