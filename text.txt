@@ -1,2 +1,0 @@
-this is the text to verify Webhooks
-this is added.
